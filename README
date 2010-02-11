@@ -1,0 +1,179 @@
+README for Ruby wrapper of Net::Patricia
+---------------------------------------
+
+rPatricia - A ruby wrapper of Net::Patricia
+
+DESCRIPTION
+-----------
+
+  This is a ruby wrapper of Net::Patricia, which has been developed by 
+  Dave Plonka. The original Net::Patricia and its C API are available
+  from:
+  http://net.doit.wisc.edu/~plonka/Net-Patricia/
+
+  Net::Patricia is a module for fast IP address/prefix lookups.
+  I have modified some interfaces for the Ruby wrapper version. 
+
+NO WARANTY
+----------    
+    THE PROGRAM IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT
+    WITHOUT ANY WARRANTY. IT IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+    ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND
+    PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE
+    DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR
+    OR CORRECTION. 
+
+INSTALLATION
+------------
+
+   This package extracts, builds, installs in the usual fashion, i.e.:
+
+      $ tar xvfz rpatricia.tar.gz
+      $ cd rpatricia
+      $ ruby extconf.rb
+      $ make
+      $ ruby test.rb
+      # make install
+
+SYNOPSIS
+--------
+
+  require 'rpatricia'
+  pt = Patricia.new
+  pt.add("192.168.1.0/24")
+  pt.add("127.0.0.0/8", "user_data")
+  node = pt.search_best("127.0.0.1")
+  puts node.data
+  puts node.prefix
+  puts node.network
+  puts node.prefixlen
+  pt.remove("127.0.0.0/8")
+  puts pt.num_nodes
+  pt.show_nodes
+  pt.clear
+
+METHODS
+-------
+new:
+
+      pt = Patricia.new
+
+    This is the class' constructor - it returns a Patricia object upon
+    success or nil on failure. For now, the constructor takes no
+    arguments, and defaults to creating a tree which uses AF_INET IPv4
+    address and mask values as keys. 
+
+    The Patricia object will be destroyed automatically when there are
+    no longer any references to it.
+
+add:
+      pt.add(key_string[,user_data])
+
+    The first argument, key_string, is a network or subnet
+    specification in canonical form, e.g. ``10.0.0.0/8'', where the
+    number after the slash represents the number of bits in the
+    netmask. If no mask width is specified, the longest possible mask
+    is assumed, i.e. 32 bits for AF_INET addresses.
+
+    The second argument, user_data, is optional. If supplied, it
+    should be a STRING object specifying the user data that will be 
+    stored in the Patricia Trie node. Subsequently, this value will
+    be returned by the match methods described below to indicate a 
+    successful search. 
+
+    If no second argument is passed, the key_string will be stored as
+    the user data and therfore will likewise be returned by the match
+    functions.
+
+    On success, this method returns the object of the Patricia Trie 
+    node.
+
+add_node:    An alias of add.
+
+search_best:
+
+      pt.search_best(key_string);
+
+    This method searches the Patricia Trie to find a matching node,
+    according to normal subnetting rules for the address and mask
+    specified.
+
+    The key_string argument is a network or subnet specification in
+    canonical form, e.g. ``10.0.0.0/8'', where the number after the
+    slash represents the number of bits in the netmask. If no mask
+    width value is specified, the longest mask is assumed, i.e. 32
+    bits for AF_INET addresses.
+
+    If a matching node is found in the Patricia Trie, this method
+    returns the object of the node. This method returns nil on
+    failure.
+
+match_best:    An alias of search_best.
+
+search_exact:
+
+      pt.search_exact(key_string);
+
+    This method searches the Patricia Trie to find a matching
+    node. Its semantics are exactly the same as those described for
+    search_best except that the key must match a node exactly. I.e.,
+    it is not sufficient that the address and mask specified merely
+    falls within the subnet specified by a particular node.
+
+match_exact:	An alias of search_exact.
+
+remove:
+
+      pt.remove(key_string);
+
+    This method removes the node which exactly matches the the address
+    and mask specified from the Patricia Trie.
+
+    If the matching node is found in the Patricia Trie, it is removed,
+    and this method returns the true. This method returns nil on
+    failure. 
+
+remove_node:	 An alias of remove
+
+num_nodes:
+       
+       pt.num_nodes
+
+     This method returns the number of nodes in the Patricia Trie.
+
+show_nodes:
+
+       pt.print_nodes
+
+     This method prints all the nodes in the Patricia Trie.
+
+data:
+
+       node.data
+   
+     This method returns the user data of the Patricia Trie node.
+
+network:
+
+       node.network
+   
+     This method returns the network of the Patricia Trie node.
+
+prefix:
+
+       node.prefix
+   
+     This method returns the prefix of the Patricia Trie node.
+
+prefixlen:
+
+       node.prefixlen
+   
+     This method returns the prefix length of the Patricia Trie 
+     node.
+
+AUTHOR
+------
+Tatsuya Mori <mori.tatsuya@gmail.com>

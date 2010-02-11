@@ -1,0 +1,16 @@
+0.04 2008/2/19
+ - fixed the bug of "clear" method (destroy)
+   node data were not cleared correctly
+
+ - fixed the memory leak in search methods
+   I had to clear the prefix instances
+
+0.03 2008/2/17
+ - fixed the bug of allocating user_data strings
+
+0.02 2008/1/31
+ - fixed the bug of printing prefix for 64-bit architecture 
+   from Aki Nakao
+
+0.01 2007/11/16
+ - the first version
