@@ -3,7 +3,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rpatricia}
-  s.version = %q{0.04} # remember to update Changes if this is changed
+  s.version = %q{0.05pre} # remember to update Changes if this is changed
 
   s.homepage = "http://www.goto.info.waseda.ac.jp/~tatsuya/rpatricia/"
 
@@ -32,22 +32,12 @@ README
 TODO
 copyright
 credits.txt
-extconf.rb
-patricia.c
-patricia.h
-rpatricia.c
+ext/rpatricia/extconf.rb
+ext/rpatricia/patricia.c
+ext/rpatricia/patricia.h
+ext/rpatricia/rpatricia.c
+rpatricia.gemspec
 test.rb
-) - %w(test.rb)
-# intentionally omitting test.rb to avoid being accidentally required
-# in case somebody does "require 'test'" in their code.  We
-# still need to hope nobody calls "require 'extconf'"
-#
-# See below for plans...
-
-  # the path layout is unchanged from the current tarballs
-  # We should move files currently in the top level into the more
-  # traditional ext/rpatricia/ directory in the future to avoid
-  # require conflicts like we have with test.rb
-  s.require_paths = %w(.)
-  s.extensions = %w(extconf.rb)
+)
+  s.extensions = %w(ext/rpatricia/extconf.rb)
 end
