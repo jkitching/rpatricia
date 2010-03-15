@@ -1,5 +1,6 @@
-0.05 2010/03/??
+0.05 2010/03/12
  - reorganized directory layout
+   no chance of accidentally having 'extconf' in the require path
 
 0.04 2008/2/19
  - fixed the bug of "clear" method (destroy)
