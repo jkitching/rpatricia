@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include "patricia.h"
 
-VALUE cPatricia;
+static VALUE cPatricia;
 
-void dummy(void) {}
+static void dummy(void) {}
 
 static VALUE
 p_destroy (VALUE self)
@@ -21,7 +21,7 @@ p_destroy (VALUE self)
   return Qtrue;
 }
 
-VALUE
+static VALUE
 p_add (int argc, VALUE *argv, VALUE self)
 {
   int str_len;
