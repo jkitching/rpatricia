@@ -12,20 +12,28 @@ static VALUE cPatricia;
 
 static void dummy(void) {}
 
+/*
+ * this method only exists for backwards compatibility, we now rely
+ * on the GC to do all the dirty work of freeing node data for us
+ */
 static VALUE
 p_destroy (VALUE self)
 {
-  patricia_tree_t *tree;
-  Data_Get_Struct(self, patricia_tree_t, tree);
-  Destroy_Patricia(tree, free);
   return Qtrue;
+}
+
+static void
+p_node_mark (void *ptr)
+{
+  patricia_node_t *node = ptr;
+
+  rb_gc_mark((VALUE)node->data);
 }
 
 static VALUE
 p_add (int argc, VALUE *argv, VALUE self)
 {
-  int str_len;
-  char *user_data;
+  VALUE user_data;
   patricia_tree_t *tree;
   patricia_node_t *node;
   prefix_t *prefix;
@@ -39,15 +47,18 @@ p_add (int argc, VALUE *argv, VALUE self)
   Deref_Prefix(prefix);
 
   if (argc == 2) {
-    user_data = STR2CSTR(argv[1]);
-    str_len = strlen(user_data);
-    node->data = (char *) malloc((str_len + 1) * sizeof(char));
-    sprintf((char *)node->data, user_data);
+    user_data = argv[1];
+
+    /* for backwards compatibility, we always dup and return new strings */
+    if (TYPE(user_data) == T_STRING)
+      user_data = rb_obj_dup(user_data);
   } else {
-    node->data = (char *) malloc(sizeof(char));
-    sprintf((char *)node->data, "");
+    user_data = rb_str_new(NULL, 0);
   }
-  return Data_Wrap_Struct(cPatricia, 0, 0, node);
+  PATRICIA_DATA_SET(node, user_data);
+
+  /* node will be freed when parent is freed */
+  return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
 }
 
 static VALUE
@@ -85,7 +96,7 @@ p_match (VALUE self, VALUE r_key)
   Deref_Prefix (prefix);
 
   if (node)
-    return Data_Wrap_Struct(cPatricia, 0, 0, node);
+    return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
   else 
     return Qfalse;
 
@@ -104,7 +115,7 @@ p_match_exact (VALUE self, VALUE r_key)
   Deref_Prefix (prefix);
 
   if (node)
-    return Data_Wrap_Struct(cPatricia, 0, 0, node);
+    return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
   else 
     return Qfalse;
 }
@@ -140,9 +151,17 @@ p_print_nodes (VALUE self)
 static VALUE
 p_data (VALUE self)
 {
+  VALUE user_data;
   patricia_node_t *node;
   Data_Get_Struct(self, patricia_node_t, node);
-  return rb_str_new2((char *)node->data);
+
+  user_data = (VALUE)node->data;
+
+  /* for backwards compatibility, we always dup and return new strings */
+  if (TYPE(user_data) == T_STRING)
+    user_data = rb_obj_dup(user_data);
+
+  return user_data;
 }
 
 static VALUE
@@ -173,12 +192,38 @@ p_prefixlen (VALUE self)
   return INT2NUM(node->prefix->bitlen);
 }
 
+/* called during GC for each node->data attached to a Patricia tree */
+static void
+p_tree_mark_each(prefix_t *prefix, void *data)
+{
+  VALUE user_data = (VALUE)data;
+
+  rb_gc_mark(user_data);
+}
+
+static void
+p_tree_mark (void *ptr)
+{
+  patricia_tree_t *tree = ptr;
+
+  patricia_process(tree, p_tree_mark_each);
+}
+
+static void
+p_tree_free (void *ptr)
+{
+  patricia_tree_t *tree = ptr;
+
+  /* no need to explicitly free each node->data, GC will do it for us */
+  Destroy_Patricia(tree, NULL);
+}
+
 static VALUE
 p_new (VALUE self) 
 {
   patricia_tree_t *tree;
   tree = New_Patricia(32); /* assuming only IPv4 */
-  return Data_Wrap_Struct(cPatricia, 0, 0, tree);
+  return Data_Wrap_Struct(cPatricia, p_tree_mark, p_tree_free, tree);
 }
 
 void
