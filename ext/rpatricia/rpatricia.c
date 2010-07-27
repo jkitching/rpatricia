@@ -51,7 +51,7 @@ p_add (int argc, VALUE *argv, VALUE self)
 
     /* for backwards compatibility, we always dup and return new strings */
     if (TYPE(user_data) == T_STRING)
-      user_data = rb_obj_dup(user_data);
+      user_data = rb_str_dup(user_data);
   } else {
     user_data = rb_str_new(NULL, 0);
   }
@@ -159,7 +159,7 @@ p_data (VALUE self)
 
   /* for backwards compatibility, we always dup and return new strings */
   if (TYPE(user_data) == T_STRING)
-    user_data = rb_obj_dup(user_data);
+    user_data = rb_str_dup(user_data);
 
   return user_data;
 }
