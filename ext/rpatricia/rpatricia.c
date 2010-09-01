@@ -4,7 +4,6 @@
  */
 
 #include "ruby.h"
-#include <stdio.h> /* printf */
 #include <stdlib.h>
 #include "patricia.h"
 
@@ -142,18 +141,33 @@ p_num_nodes (VALUE self)
   return INT2NUM(n);
 }
 
+/* needed for Ruby 1.8.6, in 1.8.7 and later */
+#ifndef HAVE_RB_STR_SET_LEN
+static void
+rb_str_set_len(VALUE str, long len)
+{
+  RSTRING(str)->len = len;
+  RSTRING(str)->ptr[len] = '\0';
+}
+#endif
+
 static VALUE
 p_print_nodes (VALUE self)
 {
-  int n;
-  char buff[32];
+  ID id_printf = rb_intern("printf");
+  VALUE fmt = rb_str_new2("node: %s\n");
+  VALUE buf = rb_str_buf_new(128);
+  char *cbuf;
   patricia_tree_t *tree;
   patricia_node_t *node;
   Data_Get_Struct(self, patricia_tree_t, tree);
 
   PATRICIA_WALK(tree->head, node) {
-    prefix_toa2x(node->prefix, buff, 1);
-    printf("node: %s\n", buff);
+    rb_str_resize(buf, 128);
+    cbuf = RSTRING_PTR(buf);
+    prefix_toa2x(node->prefix, cbuf, 1);
+    rb_str_set_len(buf, strlen(cbuf));
+    rb_funcall(rb_stdout, id_printf, 2, fmt, buf);
   } PATRICIA_WALK_END;
   return Qtrue;
 }
