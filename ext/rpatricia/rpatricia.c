@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "patricia.h"
 
-static VALUE cPatricia;
+static VALUE cPatricia, cNode;
 
 static void dummy(void) {}
 
@@ -28,6 +28,13 @@ p_node_mark (void *ptr)
   patricia_node_t *node = ptr;
 
   rb_gc_mark((VALUE)node->data);
+}
+
+static VALUE
+wrap_node(patricia_node_t *node)
+{
+  /* node will be freed when parent is freed */
+  return Data_Wrap_Struct(cNode, p_node_mark, 0, node);
 }
 
 static prefix_t *
@@ -70,7 +77,7 @@ p_add (int argc, VALUE *argv, VALUE self)
   PATRICIA_DATA_SET(node, user_data);
 
   /* node will be freed when parent is freed */
-  return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
+  return wrap_node(node);
 }
 
 static VALUE
@@ -105,11 +112,7 @@ p_match (VALUE self, VALUE r_key)
   node = patricia_search_best(tree, prefix);
   Deref_Prefix (prefix);
 
-  if (node)
-    return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
-  else 
-    return Qfalse;
-
+  return node ? wrap_node(node) : Qfalse;
 }
 
 static VALUE
@@ -124,10 +127,7 @@ p_match_exact (VALUE self, VALUE r_key)
   node = patricia_search_exact(tree, prefix);
   Deref_Prefix (prefix);
 
-  if (node)
-    return Data_Wrap_Struct(cPatricia, p_node_mark, 0, node);
-  else 
-    return Qfalse;
+  return node ? wrap_node(node) : Qfalse;
 }
 
 static VALUE
@@ -240,6 +240,7 @@ void
 Init_rpatricia (void)
 {
   cPatricia = rb_define_class("Patricia", rb_cObject);
+  cNode = rb_define_class_under(cPatricia, "Node", rb_cObject);
 
   /* create new Patricia object */
   rb_define_singleton_method(cPatricia, "new", p_new, 0);
@@ -270,11 +271,11 @@ Init_rpatricia (void)
   rb_define_method(cPatricia, "clear", p_destroy, 0); 
 
   /*---------- methods to node ----------*/
-  rb_define_method(cPatricia, "data", p_data, 0);
-  rb_define_method(cPatricia, "show_data", p_data, 0);
-  rb_define_method(cPatricia, "network", p_network, 0);
-  rb_define_method(cPatricia, "prefix", p_prefix, 0);
-  rb_define_method(cPatricia, "prefixlen", p_prefixlen, 0);
+  rb_define_method(cNode, "data", p_data, 0);
+  rb_define_method(cNode, "show_data", p_data, 0);
+  rb_define_method(cNode, "network", p_network, 0);
+  rb_define_method(cNode, "prefix", p_prefix, 0);
+  rb_define_method(cNode, "prefixlen", p_prefixlen, 0);
   //  rb_define_method(cPatricia, "family", p_family, 0); 
 
 }

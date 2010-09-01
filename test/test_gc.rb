@@ -17,7 +17,7 @@ class TestGc < Test::Unit::TestCase
 
   def test_gc
     assert_nothing_raised do
-      10_000_000.times do
+      5_000_000.times do
         t = Patricia.new
         t.add('10.0.0.0/8', {})
         t.add('127.0.0.0/24', "home sweet home")
@@ -25,7 +25,7 @@ class TestGc < Test::Unit::TestCase
     end
 
     # ensure what we created originally didn't get GC-ed'
-    100.times do
+    5_000_000.times do
       assert_equal [], @arrays.match_best('127.0.0.1').data
       assert_equal "localhost", @strings.match_best('127.0.0.1').data
     end
