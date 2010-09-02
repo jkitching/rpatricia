@@ -15,6 +15,19 @@ class TestGc < Test::Unit::TestCase
     @strings.add('127.0.0.0/24', "localhost")
   end
 
+  def test_clear
+    1_000_000.times do
+      @strings.clear
+      assert_equal 0, @strings.num_nodes
+      @strings.add('10.0.0.0/8', "big lan")
+      assert_equal 1, @strings.num_nodes
+      @strings.add('127.0.0.0/8', "localhost")
+      assert_equal 2, @strings.num_nodes
+      @strings.add('192.168.1.0/24', "home")
+      assert_equal 3, @strings.num_nodes
+    end
+  end
+
   def test_gc_dup
     100000.times do
       tmp = @strings.dup

@@ -12,13 +12,15 @@ static VALUE cPatricia, cNode;
 
 static void dummy(void) {}
 
-/*
- * this method only exists for backwards compatibility, we now rely
- * on the GC to do all the dirty work of freeing node data for us
- */
 static VALUE
 p_destroy (VALUE self)
 {
+  patricia_tree_t *tree;
+
+  Data_Get_Struct(self, patricia_tree_t, tree);
+  Clear_Patricia(tree, dummy);
+  tree->head = NULL; /* Clear_Patricia() should do this, actually */
+
   return Qtrue;
 }
 
