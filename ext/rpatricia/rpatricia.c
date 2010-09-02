@@ -170,7 +170,7 @@ rb_str_set_len(VALUE str, long len)
 #endif
 
 static VALUE
-p_print_nodes (VALUE self)
+p_print_nodes (int argc, VALUE *argv, VALUE self)
 {
   ID id_printf = rb_intern("printf");
   VALUE fmt = rb_str_new2("node: %s\n");
@@ -178,7 +178,12 @@ p_print_nodes (VALUE self)
   char *cbuf;
   patricia_tree_t *tree;
   patricia_node_t *node;
+  VALUE out;
   Data_Get_Struct(self, patricia_tree_t, tree);
+
+  rb_scan_args(argc, argv, "01", &out);
+  if (NIL_P(out))
+    out = rb_stdout;
 
   if (tree->head) {
     PATRICIA_WALK(tree->head, node) {
@@ -186,7 +191,7 @@ p_print_nodes (VALUE self)
       cbuf = RSTRING_PTR(buf);
       prefix_toa2x(node->prefix, cbuf, 1);
       rb_str_set_len(buf, strlen(cbuf));
-      rb_funcall(rb_stdout, id_printf, 2, fmt, buf);
+      rb_funcall(out, id_printf, 2, fmt, buf);
     } PATRICIA_WALK_END;
   }
   return Qtrue;
@@ -328,7 +333,7 @@ Init_rpatricia (void)
 
   /* derivatives of climb */
   rb_define_method(cPatricia, "num_nodes", p_num_nodes, 0);
-  rb_define_method(cPatricia, "show_nodes", p_print_nodes, 0); 
+  rb_define_method(cPatricia, "show_nodes", p_print_nodes, -1);
 
   /* destroy tree */
   rb_define_method(cPatricia, "destroy", p_destroy, 0); 
