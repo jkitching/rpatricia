@@ -6,6 +6,7 @@
 #include "ruby.h"
 #include <stdlib.h>
 #include "patricia.h"
+#include <assert.h>
 
 static VALUE cPatricia, cNode;
 
@@ -245,11 +246,37 @@ p_tree_free (void *ptr)
 }
 
 static VALUE
-p_new (VALUE self) 
+p_alloc(VALUE klass)
 {
   patricia_tree_t *tree;
   tree = New_Patricia(32); /* assuming only IPv4 */
-  return Data_Wrap_Struct(cPatricia, p_tree_mark, p_tree_free, tree);
+
+  return Data_Wrap_Struct(klass, p_tree_mark, p_tree_free, tree);
+}
+
+static VALUE
+p_init_copy(VALUE self, VALUE orig)
+{
+  patricia_tree_t *orig_tree;
+
+  Data_Get_Struct(orig, patricia_tree_t, orig_tree);
+  if (orig_tree->head) {
+    patricia_tree_t *tree;
+    patricia_node_t *orig_node, *node;
+    prefix_t prefix;
+    VALUE user_data;
+
+    Data_Get_Struct(self, patricia_tree_t, tree);
+    PATRICIA_WALK(orig_tree->head, orig_node) {
+      node = patricia_lookup(tree, orig_node->prefix);
+      assert(node->prefix == orig_node->prefix);
+
+      user_data = (VALUE)(orig_node->data);
+      if (T_STRING == TYPE(user_data))
+        user_data = rb_str_dup(user_data);
+      PATRICIA_DATA_SET(node, user_data);
+    } PATRICIA_WALK_END;
+  }
 }
 
 void
@@ -258,8 +285,9 @@ Init_rpatricia (void)
   cPatricia = rb_define_class("Patricia", rb_cObject);
   cNode = rb_define_class_under(cPatricia, "Node", rb_cObject);
 
-  /* create new Patricia object */
-  rb_define_singleton_method(cPatricia, "new", p_new, 0);
+  /* allocate new Patricia object, called before initialize  */
+  rb_define_alloc_func(cPatricia, p_alloc);
+  rb_define_method(cPatricia, "initialize_copy", p_init_copy, 1);
 
   /*---------- methods to tree ----------*/
   /* add string */
