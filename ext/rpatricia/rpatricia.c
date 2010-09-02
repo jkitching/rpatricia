@@ -114,7 +114,7 @@ p_match (VALUE self, VALUE r_key)
   node = patricia_search_best(tree, prefix);
   Deref_Prefix (prefix);
 
-  return node ? wrap_node(node) : Qfalse;
+  return node ? wrap_node(node) : Qnil;
 }
 
 static VALUE
@@ -144,7 +144,7 @@ p_match_exact (VALUE self, VALUE r_key)
   node = patricia_search_exact(tree, prefix);
   Deref_Prefix (prefix);
 
-  return node ? wrap_node(node) : Qfalse;
+  return node ? wrap_node(node) : Qnil;
 }
 
 static VALUE

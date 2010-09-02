@@ -139,7 +139,7 @@ remove:
     and mask specified from the Patricia Trie.
 
     If the matching node is found in the Patricia Trie, it is removed,
-    and this method returns the true. This method returns nil on
+    and this method returns the true. This method returns false on
     failure. 
 
 remove_node:	 An alias of remove
