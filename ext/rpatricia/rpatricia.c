@@ -136,7 +136,7 @@ p_num_nodes (VALUE self)
   patricia_tree_t *tree;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  n = patricia_walk_inorder(tree->head, dummy);
+  n = tree->head ? patricia_walk_inorder(tree->head, dummy) : 0;
 
   return INT2NUM(n);
 }
@@ -162,13 +162,15 @@ p_print_nodes (VALUE self)
   patricia_node_t *node;
   Data_Get_Struct(self, patricia_tree_t, tree);
 
-  PATRICIA_WALK(tree->head, node) {
-    rb_str_resize(buf, 128);
-    cbuf = RSTRING_PTR(buf);
-    prefix_toa2x(node->prefix, cbuf, 1);
-    rb_str_set_len(buf, strlen(cbuf));
-    rb_funcall(rb_stdout, id_printf, 2, fmt, buf);
-  } PATRICIA_WALK_END;
+  if (tree->head) {
+    PATRICIA_WALK(tree->head, node) {
+      rb_str_resize(buf, 128);
+      cbuf = RSTRING_PTR(buf);
+      prefix_toa2x(node->prefix, cbuf, 1);
+      rb_str_set_len(buf, strlen(cbuf));
+      rb_funcall(rb_stdout, id_printf, 2, fmt, buf);
+    } PATRICIA_WALK_END;
+  }
   return Qtrue;
 }
 

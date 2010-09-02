@@ -18,4 +18,16 @@ class TestOldSegfaults < Test::Unit::TestCase
       assert_raises(NoMethodError) { matched.destroy }
     end
   end
+
+  def test_empty_show_nodes
+    assert_nothing_raised do
+      t = Patricia.new
+      t.show_nodes
+    end
+  end
+
+  def test_empty_num_nodes
+    t = Patricia.new
+    assert_equal 0, t.num_nodes
+  end
 end
