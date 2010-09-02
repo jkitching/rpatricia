@@ -60,10 +60,9 @@ new:
 
       pt = Patricia.new
 
-    This is the class' constructor - it returns a Patricia object upon
-    success or nil on failure. For now, the constructor takes no
-    arguments, and defaults to creating a tree which uses AF_INET IPv4
-    address and mask values as keys. 
+    This is the class' constructor - it returns a Patricia object.  For
+    now, the constructor takes no arguments, and defaults to creating a
+    tree which uses AF_INET IPv4 address and mask values as keys.
 
     The Patricia object will be destroyed automatically when there are
     no longer any references to it.

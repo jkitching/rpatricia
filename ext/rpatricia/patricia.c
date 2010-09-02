@@ -31,7 +31,13 @@ static char copyright[] =
 
 #include "patricia.h"
 
-#define Delete free
+#if defined(HAVE_RUBY_XCALLOC)
+#  include <ruby.h>
+#  define calloc xcalloc
+#  define Delete xfree
+#else
+#  define Delete free
+#endif
 
 /* { from prefix.c */
 
