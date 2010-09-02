@@ -118,6 +118,21 @@ p_match (VALUE self, VALUE r_key)
 }
 
 static VALUE
+p_include (VALUE self, VALUE r_key)
+{
+  patricia_tree_t *tree;
+  patricia_node_t *node;
+  prefix_t *prefix;
+
+  Data_Get_Struct(self, patricia_tree_t, tree);
+  prefix = my_ascii2prefix (AF_INET, r_key);
+  node = patricia_search_best(tree, prefix);
+  Deref_Prefix (prefix);
+
+  return node ? Qtrue : Qfalse;
+}
+
+static VALUE
 p_match_exact (VALUE self, VALUE r_key)
 {
   patricia_tree_t *tree;
@@ -303,6 +318,9 @@ Init_rpatricia (void)
   /* exact match  */
   rb_define_method(cPatricia, "match_exact", p_match_exact, 1); 
   rb_define_method(cPatricia, "search_exact", p_match_exact, 1); 
+
+  /* check existence */
+  rb_define_method(cPatricia, "include?", p_include, 1);
 
   /* removal */
   rb_define_method(cPatricia, "remove", p_remove, 1); 

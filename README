@@ -124,6 +124,14 @@ search_exact:
 
 match_exact:	An alias of search_exact.
 
+include?:
+
+      pt.include?(key_string);
+
+    This method behaves like match_best, but returns true on success
+    and false on failure.  This method is more efficient than match_best
+    as it does not allocate a new object.
+
 remove:
 
       pt.remove(key_string);
