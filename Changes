@@ -1,3 +1,19 @@
+0.06 2010/09/14
+  - rely on Ruby GC for allocations/free
+    no need to explicitly destroy objects anymore
+  - Ruby 1.9.2 C API compatibility
+  - allow creation of subclasses of Patricia class
+  - non-String objects may be stored as node-data
+  - Patricia::Node objects are returned when match succeeds
+    It's no longer possible to call tree methods on node
+    objects and cause segfaults.
+  - Patricia#show_nodes may be given a custom IO-like object
+  - sync docs with remove, match_best and match_exact behavior
+  - ArgumentError is raised for invalid addresses
+    no more assertion failures for bad addresses
+  - Patricia#show_nodes and Patricia#num_nodes no longer
+    segfaults on empty trees
+
 0.05 2010/03/12
  - reorganized directory layout
    no chance of accidentally having 'extconf' in the require path
