@@ -30,4 +30,12 @@ class TestOldSegfaults < Test::Unit::TestCase
     t = Patricia.new
     assert_equal 0, t.num_nodes
   end
+
+  def test_gc_ordering_segfault
+    added = []
+    100000.times do
+      tmp = Patricia.new
+      added << tmp.add('8.8.8.8')
+    end
+  end
 end

@@ -33,10 +33,13 @@ p_node_mark (void *ptr)
 }
 
 static VALUE
-wrap_node(patricia_node_t *node)
+wrap_node(patricia_node_t *orig)
 {
-  /* node will be freed when parent is freed */
-  return Data_Wrap_Struct(cNode, p_node_mark, 0, node);
+  patricia_node_t *node = ALLOC(patricia_node_t);
+
+  memcpy(node, orig, sizeof(patricia_node_t));
+
+  return Data_Wrap_Struct(cNode, p_node_mark, -1, node);
 }
 
 static prefix_t *
