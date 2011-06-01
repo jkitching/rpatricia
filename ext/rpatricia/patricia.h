@@ -23,8 +23,6 @@ typedef void (*void_fn_t)();
 #define BIT_TEST(f, b)  ((f) & (b))
 /* } */
 
-#define addroute make_and_lookup
-
 #include <sys/types.h> /* for u_* definitions (on FreeBSD 5) */
 
 #include <errno.h> /* for EAFNOSUPPORT */
@@ -91,9 +89,6 @@ void patricia_process (patricia_tree_t *patricia, void_fn_t func);
 
 prefix_t *
 ascii2prefix (int family, char *string);
-
-patricia_node_t *
-make_and_lookup (patricia_tree_t *tree, char *string);
 
 /* } */
 
