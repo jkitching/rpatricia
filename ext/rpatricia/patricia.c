@@ -67,43 +67,6 @@ comp_with_mask (void *addr, void *dest, u_int mask)
     return (0);
 }
 
-/* inet_pton substitute implementation
- * Uses inet_addr to convert an IP address in dotted decimal notation into 
- * unsigned long and copies the result to dst.
- * Only supports AF_INET.  Follows standard error return conventions of 
- * inet_pton.
- */
-int
-inet_pton (int af, const char *src, void *dst)
-{
-    u_long result;  
-
-    if (af == AF_INET) {
-	result = inet_addr(src);
-	if (result == -1)
-	    return 0;
-	else {
-			memcpy (dst, &result, 4);
-	    return 1;
-		}
-	}
-#ifdef NT
-#ifdef HAVE_IPV6
-	else if (af == AF_INET6) {
-		struct in6_addr Address;
-		return (inet6_addr(src, &Address));
-	}
-#endif /* HAVE_IPV6 */
-#endif /* NT */
-#ifndef NT
-    else {
-
-	errno = EAFNOSUPPORT;
-	return -1;
-    }
-#endif /* NT */
-}
-
 /* this allows imcomplete prefix */
 int
 my_inet_pton (int af, const char *src, void *dst)
