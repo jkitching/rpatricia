@@ -43,10 +43,10 @@ wrap_node(patricia_node_t *orig)
 }
 
 static prefix_t *
-my_ascii2prefix(int family, VALUE str)
+my_ascii2prefix(VALUE str)
 {
   char *cstr = StringValuePtr(str);
-  prefix_t *prefix = ascii2prefix(family, cstr);
+  prefix_t *prefix = ascii2prefix(cstr);
 
   if (!prefix)
     rb_raise(rb_eArgError, "invalid prefix: %s", cstr);
@@ -66,7 +66,7 @@ p_add (int argc, VALUE *argv, VALUE self)
     return Qnil;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(AF_INET, argv[0]);
+  prefix = my_ascii2prefix(argv[0]);
   node = patricia_lookup(tree, prefix);
   Deref_Prefix(prefix);
 
@@ -93,7 +93,7 @@ p_remove (VALUE self, VALUE r_key)
   prefix_t *prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix (AF_INET, r_key);
+  prefix = my_ascii2prefix(r_key);
   node = patricia_search_exact(tree, prefix);
   Deref_Prefix (prefix);
 
@@ -113,7 +113,7 @@ p_match (VALUE self, VALUE r_key)
   prefix_t *prefix;
   
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix (AF_INET, r_key);
+  prefix = my_ascii2prefix(r_key);
   node = patricia_search_best(tree, prefix);
   Deref_Prefix (prefix);
 
@@ -128,7 +128,7 @@ p_include (VALUE self, VALUE r_key)
   prefix_t *prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix (AF_INET, r_key);
+  prefix = my_ascii2prefix(r_key);
   node = patricia_search_best(tree, prefix);
   Deref_Prefix (prefix);
 
@@ -143,7 +143,7 @@ p_match_exact (VALUE self, VALUE r_key)
   prefix_t *prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix (AF_INET, r_key);
+  prefix = my_ascii2prefix(r_key);
   node = patricia_search_exact(tree, prefix);
   Deref_Prefix (prefix);
 

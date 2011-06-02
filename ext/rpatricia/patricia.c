@@ -67,43 +67,6 @@ comp_with_mask (void *addr, void *dest, u_int mask)
     return (0);
 }
 
-/* this allows imcomplete prefix */
-int
-my_inet_pton (int af, const char *src, void *dst)
-{
-    if (af == AF_INET) {
-        int i, c, val;
-        u_char xp[4] = {0, 0, 0, 0};
-
-        for (i = 0; ; i++) {
-	    c = *src++;
-	    if (!isdigit (c))
-		return (-1);
-	    val = 0;
-	    do {
-		val = val * 10 + c - '0';
-		if (val > 255)
-		    return (0);
-		c = *src++;
-	    } while (c && isdigit (c));
-            xp[i] = val;
-	    if (c == '\0')
-		break;
-            if (c != '.')
-                return (0);
-	    if (i >= 3)
-		return (0);
-        }
-	memcpy (dst, xp, 4);
-        return (1);
-    } else if (af == AF_INET6) {
-        return (inet_pton (af, src, dst));
-    } else {
-	errno = EAFNOSUPPORT;
-	return -1;
-    }
-}
-
 /* 
  * convert prefix information to ascii string with length
  * thread safe and re-entrant implementation
@@ -154,36 +117,33 @@ prefix_toa2 (prefix_t *prefix, char *buff)
 prefix_t *
 New_Prefix2 (int family, void *dest, int bitlen, prefix_t *prefix)
 {
-    int dynamic_allocated = 0;
-    int default_bitlen = 32;
+    prefix_t *orig_prefix = prefix;
+    int default_bitlen;
+    size_t size, addr_size;
 
-    if (family == AF_INET6) {
-        default_bitlen = 128;
-	if (prefix == NULL) {
-            prefix = calloc(1, sizeof (prefix_t));
-	    dynamic_allocated++;
-	}
-	memcpy (&prefix->add.sin6, dest, 16);
+    switch (family) {
+    case AF_INET6:
+        addr_size = sizeof(struct in6_addr);
+	size = sizeof(prefix_t);
+	break;
+    case AF_INET:
+	addr_size = sizeof(struct in_addr);
+	size = sizeof(prefix4_t);
+	break;
+    default:
+        return NULL;
     }
-    else
-    if (family == AF_INET) {
-		if (prefix == NULL) {
-            prefix = calloc(1, sizeof (prefix4_t));
-			dynamic_allocated++;
-		}
-		memcpy (&prefix->add.sin, dest, 4);
-    }
-    else {
-        return (NULL);
-    }
-
-    prefix->bitlen = (bitlen >= 0)? bitlen: default_bitlen;
+    default_bitlen = addr_size * CHAR_BIT;
+    if (bitlen > default_bitlen)
+	return NULL;
+    if (!orig_prefix)
+	prefix = calloc(1, size);
+    prefix->bitlen = bitlen >= 0 ? bitlen : default_bitlen;
     prefix->family = family;
-    prefix->ref_count = 0;
-    if (dynamic_allocated) {
-        prefix->ref_count++;
-   }
-    return (prefix);
+    prefix->ref_count = orig_prefix ? 0 : 1;
+    memcpy(&prefix->add.sin6, dest, addr_size);
+
+    return prefix;
 }
 
 prefix_t *
@@ -195,59 +155,44 @@ New_Prefix (int family, void *dest, int bitlen)
 /* ascii2prefix
  */
 prefix_t *
-ascii2prefix (int family, char *string)
+ascii2prefix(char *string)
 {
-    u_long bitlen, maxbitlen = 0;
-    char *cp;
-    struct in_addr sin;
-    struct in6_addr sin6;
+    prefix_t *prefix;
+    long bitlen;
+    size_t maxbitlen;
+    void *dest;
+    char *slash, *end;
     int result;
-    char save[MAXLINE];
+    char save[INET6_ADDRSTRLEN];
+    size_t len;
+    int family;
+    union {
+	struct in6_addr sin6;
+	struct in_addr sin;
+    } addr;
 
-    if (string == NULL)
-		return (NULL);
+    assert(string && "string is NULL");
+    len = strlen(string);
+    slash = memchr(string, '/', len);
+    if (slash) {
+	bitlen = strtol(slash + 1, &end, 10);
+	if (*end || (bitlen < 0) || ((slash - string) >= (int)sizeof(save)))
+	    return NULL;
 
-    /* easy way to handle both families */
-    if (family == 0) {
-       family = AF_INET;
-       if (strchr (string, ':')) family = AF_INET6;
+	/* copy the string to save. Avoid destroying the string */
+	memcpy(save, string, slash - string);
+	save[slash - string] = '\0';
+	string = save;
+    } else {
+	bitlen = -1;
     }
 
-    if (family == AF_INET) {
-		maxbitlen = 32;
-    }
-    else if (family == AF_INET6) {
-		maxbitlen = 128;
-    }
+    family = memchr(string, ':', len) ? AF_INET6 : AF_INET;
+    result = inet_pton(family, string, &addr);
+    if (result != 1)
+	return NULL;
 
-    if ((cp = strchr (string, '/')) != NULL) {
-		bitlen = atol (cp + 1);
-		/* *cp = '\0'; */
-		/* copy the string to save. Avoid destroying the string */
-		assert (cp - string < MAXLINE);
-		memcpy (save, string, cp - string);
-		save[cp - string] = '\0';
-		string = save;
-		if (bitlen < 0 || bitlen > maxbitlen)
-			bitlen = maxbitlen;
-		}
-		else {
-			bitlen = maxbitlen;
-		}
-
-		if (family == AF_INET) {
-			if ((result = my_inet_pton (AF_INET, string, &sin)) <= 0)
-				return (NULL);
-			return (New_Prefix (AF_INET, &sin, bitlen));
-		}
-
-		else if (family == AF_INET6) {
-			if ((result = inet_pton (AF_INET6, string, &sin6)) <= 0)
-				return (NULL);
-			return (New_Prefix (AF_INET6, &sin6, bitlen));
-		}
-		else
-			return (NULL);
+    return New_Prefix2(family, &addr, bitlen, NULL);
 }
 
 prefix_t *
