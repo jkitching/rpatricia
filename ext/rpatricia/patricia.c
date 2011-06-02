@@ -96,14 +96,10 @@ my_inet_pton (int af, const char *src, void *dst)
         }
 	memcpy (dst, xp, 4);
         return (1);
-#ifdef HAVE_IPV6
     } else if (af == AF_INET6) {
         return (inet_pton (af, src, dst));
-#endif /* HAVE_IPV6 */
     } else {
-#ifndef NT
 	errno = EAFNOSUPPORT;
-#endif /* NT */
 	return -1;
     }
 }
@@ -153,7 +149,6 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 	}
 	return (buff);
     }
-#ifdef HAVE_IPV6
     else if (prefix->family == AF_INET6) {
 	char *r;
 	r = (char *) inet_ntop (AF_INET6, &prefix->add.sin6, buff, 48 /* a guess value */ );
@@ -163,7 +158,6 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 	}
 	return (buff);
     }
-#endif /* HAVE_IPV6 */
     else
 	return (NULL);
 }
@@ -191,27 +185,18 @@ New_Prefix2 (int family, void *dest, int bitlen, prefix_t *prefix)
     int dynamic_allocated = 0;
     int default_bitlen = 32;
 
-#ifdef HAVE_IPV6
     if (family == AF_INET6) {
         default_bitlen = 128;
 	if (prefix == NULL) {
-            prefix = calloc(1, sizeof (prefix6_t));
+            prefix = calloc(1, sizeof (prefix_t));
 	    dynamic_allocated++;
 	}
 	memcpy (&prefix->add.sin6, dest, 16);
     }
     else
-#endif /* HAVE_IPV6 */
     if (family == AF_INET) {
 		if (prefix == NULL) {
-#ifndef NT
             prefix = calloc(1, sizeof (prefix4_t));
-#else
-			//for some reason, compiler is getting
-			//prefix4_t size incorrect on NT
-			prefix = calloc(1, sizeof (prefix_t)); 
-#endif /* NT */
-		
 			dynamic_allocated++;
 		}
 		memcpy (&prefix->add.sin, dest, 4);
@@ -244,9 +229,7 @@ ascii2prefix (int family, char *string)
     u_long bitlen, maxbitlen = 0;
     char *cp;
     struct in_addr sin;
-#ifdef HAVE_IPV6
     struct in6_addr sin6;
-#endif /* HAVE_IPV6 */
     int result;
     char save[MAXLINE];
 
@@ -256,19 +239,15 @@ ascii2prefix (int family, char *string)
     /* easy way to handle both families */
     if (family == 0) {
        family = AF_INET;
-#ifdef HAVE_IPV6
        if (strchr (string, ':')) family = AF_INET6;
-#endif /* HAVE_IPV6 */
     }
 
     if (family == AF_INET) {
 		maxbitlen = 32;
     }
-#ifdef HAVE_IPV6
     else if (family == AF_INET6) {
 		maxbitlen = 128;
     }
-#endif /* HAVE_IPV6 */
 
     if ((cp = strchr (string, '/')) != NULL) {
 		bitlen = atol (cp + 1);
@@ -291,19 +270,11 @@ ascii2prefix (int family, char *string)
 			return (New_Prefix (AF_INET, &sin, bitlen));
 		}
 
-#ifdef HAVE_IPV6
 		else if (family == AF_INET6) {
-// Get rid of this with next IPv6 upgrade
-#if defined(NT) && !defined(HAVE_INET_NTOP)
-			inet6_addr(string, &sin6);
-			return (New_Prefix (AF_INET6, &sin6, bitlen));
-#else
 			if ((result = inet_pton (AF_INET6, string, &sin6)) <= 0)
 				return (NULL);
-#endif /* NT */
 			return (New_Prefix (AF_INET6, &sin6, bitlen));
 		}
-#endif /* HAVE_IPV6 */
 		else
 			return (NULL);
 }
