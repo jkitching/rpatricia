@@ -60,9 +60,11 @@ new:
 
       pt = Patricia.new
 
-    This is the class' constructor - it returns a Patricia object.  For
-    now, the constructor takes no arguments, and defaults to creating a
-    tree which uses AF_INET IPv4 address and mask values as keys.
+    This is the class' constructor - it returns a Patricia object for
+    handling IPv4 addresses.  To handle IPv6 addresses (only),
+    Patricia.new may be called with an additional argument:
+
+      pt = Patricia.new(:AF_INET6)
 
     The Patricia object will be destroyed automatically when there are
     no longer any references to it.
@@ -74,7 +76,8 @@ add:
     specification in canonical form, e.g. ``10.0.0.0/8'', where the
     number after the slash represents the number of bits in the
     netmask. If no mask width is specified, the longest possible mask
-    is assumed, i.e. 32 bits for AF_INET addresses.
+    is assumed, i.e. 32 bits for AF_INET addresses and 128 bits for
+    AF_INET6 addresses.
 
     The second argument, user_data, is optional. If supplied, it
     should be a STRING object specifying the user data that will be 
@@ -88,6 +91,12 @@ add:
 
     On success, this method returns the object of the Patricia Trie 
     node.
+
+family:
+
+    Returns either :AF_INET or :AF_INET6 symbol depending on how the
+    object was initialized.  A Patricia object may only handle IPv4 or
+    IPv6 addresses.
 
 add_node:    An alias of add.
 
@@ -103,7 +112,7 @@ search_best:
     canonical form, e.g. ``10.0.0.0/8'', where the number after the
     slash represents the number of bits in the netmask. If no mask
     width value is specified, the longest mask is assumed, i.e. 32
-    bits for AF_INET addresses.
+    bits for AF_INET addresses and 128 bits for AF_INET6 addresses.
 
     If a matching node is found in the Patricia Trie, this method
     returns the object of the node. This method returns nil on

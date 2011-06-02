@@ -9,6 +9,7 @@
 #include <assert.h>
 
 static VALUE cPatricia, cNode;
+static VALUE sym_AF_INET, sym_AF_INET6;
 
 static void dummy(void) {}
 
@@ -266,25 +267,42 @@ p_tree_mark (void *ptr)
 {
   patricia_tree_t *tree = ptr;
 
-  patricia_process(tree, p_tree_mark_each);
+  if (tree)
+    patricia_process(tree, p_tree_mark_each);
 }
 
 static void
 p_tree_free (void *ptr)
 {
   patricia_tree_t *tree = ptr;
-
   /* no need to explicitly free each node->data, GC will do it for us */
-  Destroy_Patricia(tree, NULL);
+  if (tree)
+    Destroy_Patricia(tree, NULL);
 }
 
 static VALUE
 p_alloc(VALUE klass)
 {
-  patricia_tree_t *tree;
-  tree = New_Patricia(32); /* assuming only IPv4 */
+  return Data_Wrap_Struct(klass, p_tree_mark, p_tree_free, NULL);
+}
 
-  return Data_Wrap_Struct(klass, p_tree_mark, p_tree_free, tree);
+static VALUE
+p_init(int argc, VALUE *argv, VALUE self)
+{
+  VALUE family;
+  int maxbits;
+
+  rb_scan_args(argc, argv, "01", &family);
+
+  if (NIL_P(family) || family == sym_AF_INET)
+    maxbits = 32;
+  else if (family == sym_AF_INET6)
+    maxbits = 128;
+  else
+    rb_raise(rb_eArgError, "unknown family (must be :AF_INET6 or :AF_INET)");
+
+  DATA_PTR(self) = New_Patricia(maxbits);
+  return self;
 }
 
 static VALUE
@@ -299,7 +317,8 @@ p_init_copy(VALUE self, VALUE orig)
     prefix_t prefix;
     VALUE user_data;
 
-    Data_Get_Struct(self, patricia_tree_t, tree);
+    DATA_PTR(self) = tree = New_Patricia(orig_tree->maxbits);
+
     PATRICIA_WALK(orig_tree->head, orig_node) {
       node = patricia_lookup(tree, orig_node->prefix);
       assert(node->prefix == orig_node->prefix);
@@ -312,20 +331,39 @@ p_init_copy(VALUE self, VALUE orig)
   }
 }
 
+static VALUE
+p_family(VALUE self)
+{
+  patricia_tree_t *tree;
+
+  Data_Get_Struct(self, patricia_tree_t, tree);
+
+  switch (tree->maxbits) {
+  case 32: return sym_AF_INET;
+  case 128: return sym_AF_INET6;
+  }
+  assert(0 && "unknown maxbits, corrupt tree");
+  return Qnil;
+}
+
 void
 Init_rpatricia (void)
 {
   cPatricia = rb_define_class("Patricia", rb_cObject);
   cNode = rb_define_class_under(cPatricia, "Node", rb_cObject);
+  sym_AF_INET = ID2SYM(rb_intern("AF_INET"));
+  sym_AF_INET6 = ID2SYM(rb_intern("AF_INET6"));
 
   /* allocate new Patricia object, called before initialize  */
   rb_define_alloc_func(cPatricia, p_alloc);
+  rb_define_private_method(cPatricia, "initialize", p_init, -1);
   rb_define_method(cPatricia, "initialize_copy", p_init_copy, 1);
 
   /*---------- methods to tree ----------*/
   /* add string */
   rb_define_method(cPatricia, "add", p_add, -1);
   rb_define_method(cPatricia, "add_node", p_add, -1);
+  rb_define_method(cPatricia, "family", p_family, 0);
 
   /* match prefix */
   rb_define_method(cPatricia, "match_best", p_match, 1); 
@@ -356,6 +394,4 @@ Init_rpatricia (void)
   rb_define_method(cNode, "network", p_network, 0);
   rb_define_method(cNode, "prefix", p_prefix, 0);
   rb_define_method(cNode, "prefixlen", p_prefixlen, 0);
-  //  rb_define_method(cPatricia, "family", p_family, 0); 
-
 }
