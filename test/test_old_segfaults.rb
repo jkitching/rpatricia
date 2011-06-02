@@ -31,6 +31,16 @@ class TestOldSegfaults < Test::Unit::TestCase
     assert_equal 0, t.num_nodes
   end
 
+  def test_v6_v4_mismatch_search_best
+    t = Patricia.new
+    assert_raises(ArgumentError) { t.search_exact("::1/128") }
+  end
+
+  def test_v6_v4_mismatch_search_exact
+    t = Patricia.new
+    assert_raises(ArgumentError) { t.search_exact("::1/128") }
+  end
+
   def test_gc_ordering_segfault
     added = []
     100000.times do
