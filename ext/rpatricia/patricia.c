@@ -70,39 +70,32 @@ comp_with_mask (void *addr, void *dest, u_int mask)
 /* 
  * convert prefix information to ascii string with length
  * thread safe and re-entrant implementation
+ *
+ * buff must be at least PATRICIA_MAXSTRLEN bytes large if with_len is true
+ * buff must be at least INET6_ADDRSTRLEN bytes large if with_len is false
  */
 char *
 prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 {
-    if (prefix == NULL)
-	return ("(Null)");
-    assert (prefix->ref_count >= 0);
+    assert(prefix && "NULL prefix not allowed");
+    assert(prefix->ref_count >= 0);
     assert(buff != NULL && "buffer must be specified");
 
-    if (prefix->family == AF_INET) {
-	u_char *a;
-	assert (prefix->bitlen <= 32);
-	a = prefix_touchar (prefix);
-	if (with_len) {
-	    sprintf (buff, "%d.%d.%d.%d/%d", a[0], a[1], a[2], a[3],
-		     prefix->bitlen);
-	}
-	else {
-	    sprintf (buff, "%d.%d.%d.%d", a[0], a[1], a[2], a[3]);
-	}
-	return (buff);
+    switch (prefix->family) {
+    case AF_INET:
+	assert(prefix->bitlen <= 32 && "bitlen > 32 for AF_INET");
+	break;
+    case AF_INET6:
+	assert(prefix->bitlen <= 128 && "bitlen > 128 for AF_INET6");
+	break;
+    default:
+	assert(0 && "unknown address family (memory corruption?)");
     }
-    else if (prefix->family == AF_INET6) {
-	char *r;
-	r = (char *) inet_ntop (AF_INET6, &prefix->add.sin6, buff, 48 /* a guess value */ );
-	if (r && with_len) {
-	    assert (prefix->bitlen <= 128);
-	    sprintf (buff + strlen (buff), "/%d", prefix->bitlen);
-	}
-	return (buff);
-    }
-    else
-	return (NULL);
+    buff = inet_ntop(prefix->family, &prefix->add.sin6, buff, INET6_ADDRSTRLEN);
+    assert(buff && "corrupt address");
+    if (with_len)
+	sprintf(buff + strlen(buff), "/%u", prefix->bitlen);
+    return (buff);
 }
 
 /* prefix_toa2

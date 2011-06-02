@@ -177,7 +177,7 @@ p_print_nodes (int argc, VALUE *argv, VALUE self)
 {
   ID id_printf = rb_intern("printf");
   VALUE fmt = rb_str_new2("node: %s\n");
-  VALUE buf = rb_str_buf_new(128);
+  VALUE buf = rb_str_new(0, 0);
   char *cbuf;
   patricia_tree_t *tree;
   patricia_node_t *node;
@@ -190,7 +190,7 @@ p_print_nodes (int argc, VALUE *argv, VALUE self)
 
   if (tree->head) {
     PATRICIA_WALK(tree->head, node) {
-      rb_str_resize(buf, 128);
+      rb_str_resize(buf, PATRICIA_MAXSTRLEN);
       cbuf = RSTRING_PTR(buf);
       prefix_toa2x(node->prefix, cbuf, 1);
       rb_str_set_len(buf, strlen(cbuf));
@@ -219,21 +219,29 @@ p_data (VALUE self)
 static VALUE
 p_network (VALUE self)
 {
-  char buff[32];
   patricia_node_t *node;
+  VALUE str = rb_str_new(0, PATRICIA_MAXSTRLEN);
+  char *cstr = RSTRING_PTR(str);
+
   Data_Get_Struct(self, patricia_node_t, node);
-  prefix_toa2x (node->prefix, buff, 0);
-  return rb_str_new2(buff);
+  prefix_toa2x(node->prefix, cstr, 0);
+  rb_str_set_len(str, strlen(cstr));
+
+  return str;
 }
 
 static VALUE
 p_prefix (VALUE self)
 {
-  char buff[32];
   patricia_node_t *node;
+  VALUE str = rb_str_new(0, INET6_ADDRSTRLEN);
+  char *cstr = RSTRING_PTR(str);
+
   Data_Get_Struct(self, patricia_node_t, node);
-  prefix_toa2 (node->prefix, buff);
-  return rb_str_new2(buff);
+  prefix_toa2(node->prefix, cstr);
+  rb_str_set_len(str, strlen(cstr));
+
+  return str;
 }
 
 static VALUE

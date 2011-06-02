@@ -91,6 +91,7 @@ ascii2prefix (char *string);
 /* } */
 
 #define PATRICIA_MAXBITS 128
+#define PATRICIA_MAXSTRLEN (INET6_ADDRSTRLEN + sizeof("/128") - 1)
 #define PATRICIA_NBIT(x)        (0x80 >> ((x) & 0x7f))
 #define PATRICIA_NBYTE(x)       ((x) >> 3)
 
