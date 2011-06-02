@@ -148,9 +148,8 @@ New_Prefix (int family, void *dest, int bitlen)
 /* ascii2prefix
  */
 prefix_t *
-ascii2prefix(char *string)
+ascii2prefix(char *string, prefix_t *prefix)
 {
-    prefix_t *prefix;
     long bitlen;
     size_t maxbitlen;
     void *dest;
@@ -185,10 +184,10 @@ ascii2prefix(char *string)
     if (result != 1)
 	return NULL;
 
-    return New_Prefix2(family, &addr, bitlen, NULL);
+    return New_Prefix2(family, &addr, bitlen, prefix);
 }
 
-prefix_t *
+static prefix_t *
 Ref_Prefix (prefix_t * prefix)
 {
     if (prefix == NULL)
@@ -201,7 +200,7 @@ Ref_Prefix (prefix_t * prefix)
     return (prefix);
 }
 
-void 
+static void
 Deref_Prefix (prefix_t * prefix)
 {
     if (prefix == NULL)

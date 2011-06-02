@@ -43,24 +43,18 @@ wrap_node(patricia_node_t *orig)
   return Data_Wrap_Struct(cNode, p_node_mark, -1, node);
 }
 
-static prefix_t *
-my_ascii2prefix(patricia_tree_t *tree, VALUE str)
+static void
+my_ascii2prefix(patricia_tree_t *tree, VALUE str, prefix_t *prefix)
 {
   char *cstr = StringValuePtr(str);
-  prefix_t *prefix = ascii2prefix(cstr);
+  prefix_t *ok = ascii2prefix(cstr, prefix);
 
-  if (!prefix)
+  if (!ok)
     rb_raise(rb_eArgError, "invalid prefix: %s", cstr);
 
-  if (prefix->bitlen > tree->maxbits) {
-    unsigned bitlen = prefix->bitlen;
-
-    Deref_Prefix(prefix);
+  if (prefix->bitlen > tree->maxbits)
     rb_raise(rb_eArgError, "prefix length (%u) larger than maxbits (%u)",
-             bitlen, tree->maxbits);
-  }
-
-  return prefix;
+             prefix->bitlen, tree->maxbits);
 }
 
 static VALUE
@@ -69,15 +63,14 @@ p_add (int argc, VALUE *argv, VALUE self)
   VALUE user_data;
   patricia_tree_t *tree;
   patricia_node_t *node;
-  prefix_t *prefix;
+  prefix_t prefix;
 
   if (argc > 2 || argc < 1) 
     return Qnil;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(tree, argv[0]);
-  node = patricia_lookup(tree, prefix);
-  Deref_Prefix(prefix);
+  my_ascii2prefix(tree, argv[0], &prefix);
+  node = patricia_lookup(tree, &prefix);
 
   if (argc == 2) {
     user_data = argv[1];
@@ -99,12 +92,11 @@ p_remove (VALUE self, VALUE r_key)
 {
   patricia_tree_t *tree;
   patricia_node_t *node;
-  prefix_t *prefix;
+  prefix_t prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(tree, r_key);
-  node = patricia_search_exact(tree, prefix);
-  Deref_Prefix (prefix);
+  my_ascii2prefix(tree, r_key, &prefix);
+  node = patricia_search_exact(tree, &prefix);
 
   if (node) {
     patricia_remove (tree, node);
@@ -119,12 +111,11 @@ p_match (VALUE self, VALUE r_key)
 {
   patricia_tree_t *tree;
   patricia_node_t *node;
-  prefix_t *prefix;
+  prefix_t prefix;
   
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(tree, r_key);
-  node = patricia_search_best(tree, prefix);
-  Deref_Prefix (prefix);
+  my_ascii2prefix(tree, r_key, &prefix);
+  node = patricia_search_best(tree, &prefix);
 
   return node ? wrap_node(node) : Qnil;
 }
@@ -134,12 +125,11 @@ p_include (VALUE self, VALUE r_key)
 {
   patricia_tree_t *tree;
   patricia_node_t *node;
-  prefix_t *prefix;
+  prefix_t prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(tree, r_key);
-  node = patricia_search_best(tree, prefix);
-  Deref_Prefix (prefix);
+  my_ascii2prefix(tree, r_key, &prefix);
+  node = patricia_search_best(tree, &prefix);
 
   return node ? Qtrue : Qfalse;
 }
@@ -149,12 +139,11 @@ p_match_exact (VALUE self, VALUE r_key)
 {
   patricia_tree_t *tree;
   patricia_node_t *node;
-  prefix_t *prefix;
+  prefix_t prefix;
 
   Data_Get_Struct(self, patricia_tree_t, tree);
-  prefix = my_ascii2prefix(tree, r_key);
-  node = patricia_search_exact(tree, prefix);
-  Deref_Prefix (prefix);
+  my_ascii2prefix(tree, r_key, &prefix);
+  node = patricia_search_exact(tree, &prefix);
 
   return node ? wrap_node(node) : Qnil;
 }

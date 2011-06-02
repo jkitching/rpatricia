@@ -86,7 +86,7 @@ void patricia_process (patricia_tree_t *patricia, void_fn_t func);
 /* { from demo.c */
 
 prefix_t *
-ascii2prefix (char *string);
+ascii2prefix (char *string, prefix_t *prefix);
 
 /* } */
 
