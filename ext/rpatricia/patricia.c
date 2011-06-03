@@ -77,6 +77,8 @@ comp_with_mask (void *addr, void *dest, u_int mask)
 char *
 prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 {
+    const char *dst;
+
     assert(prefix && "NULL prefix not allowed");
     assert(prefix->ref_count >= 0);
     assert(buff != NULL && "buffer must be specified");
@@ -91,11 +93,11 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
     default:
 	assert(0 && "unknown address family (memory corruption?)");
     }
-    buff = inet_ntop(prefix->family, &prefix->add.sin6, buff, INET6_ADDRSTRLEN);
-    assert(buff && "corrupt address");
+    dst = inet_ntop(prefix->family, &prefix->add.sin6, buff, INET6_ADDRSTRLEN);
+    assert(dst && "corrupt address");
     if (with_len)
 	sprintf(buff + strlen(buff), "/%u", prefix->bitlen);
-    return (buff);
+    return buff;
 }
 
 /* prefix_toa2
@@ -488,7 +490,7 @@ patricia_lookup (patricia_tree_t *patricia, prefix_t *prefix)
     /* find the first bit different */
     check_bit = (node->bit < bitlen)? node->bit: bitlen;
     differ_bit = 0;
-    for (i = 0; i*8 < check_bit; i++) {
+    for (i = 0; i*8 < (int)check_bit; i++) {
 	if ((r = (addr[i] ^ test_addr[i])) == 0) {
 	    differ_bit = (i + 1) * 8;
 	    continue;
