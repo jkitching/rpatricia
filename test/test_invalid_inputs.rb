@@ -7,6 +7,10 @@ class TestInvalidInput < Test::Unit::TestCase
     @t = Patricia.new
   end
 
+  def test_embedded_null
+    assert_raises(ArgumentError) { @t.add("100.0.0.0/8\0") }
+  end
+
   def test_invalid_add
     assert_raises(ArgumentError) { @t.add('1000.0.0.0/8') }
     assert_raises(ArgumentError) { @t.add("\0") }

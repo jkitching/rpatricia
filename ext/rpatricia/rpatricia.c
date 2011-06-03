@@ -46,7 +46,7 @@ wrap_node(patricia_node_t *orig)
 static void
 my_ascii2prefix(patricia_tree_t *tree, VALUE str, prefix_t *prefix)
 {
-  char *cstr = StringValuePtr(str);
+  char *cstr = StringValueCStr(str);
   prefix_t *ok = ascii2prefix(cstr, prefix);
 
   if (!ok)
