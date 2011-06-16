@@ -8,6 +8,10 @@
 #include "patricia.h"
 #include <assert.h>
 
+size_t patricia_walk_inorder(patricia_node_t *node, void_fn_t func);
+char * prefix_toa2x(prefix_t *prefix, char *buff, int with_len);
+char * prefix_toa2(prefix_t *prefix, char *buff);
+
 static VALUE cPatricia, cNode;
 static VALUE sym_AF_INET, sym_AF_INET6;
 
