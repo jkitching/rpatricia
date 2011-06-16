@@ -326,6 +326,8 @@ p_init_copy(VALUE self, VALUE orig)
       PATRICIA_DATA_SET(node, user_data);
     } PATRICIA_WALK_END;
   }
+
+  return self;
 }
 
 static VALUE
