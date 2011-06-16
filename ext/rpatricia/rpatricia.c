@@ -311,7 +311,6 @@ p_init_copy(VALUE self, VALUE orig)
   if (orig_tree->head) {
     patricia_tree_t *tree;
     patricia_node_t *orig_node, *node;
-    prefix_t prefix;
     VALUE user_data;
 
     DATA_PTR(self) = tree = New_Patricia(orig_tree->maxbits);
