@@ -1,3 +1,7 @@
+0.08 2011/0812
+ - IPv6 support: Patricia.new(:AF_INET6)
+ - minor internal cleanups and speedups
+
 0.07 2010/09/23
  - fix segfault from unpredictable GC ordering
    when node objects outlive the trees they come from
