@@ -190,6 +190,7 @@ prefixlen:
      This method returns the prefix length of the Patricia Trie 
      node.
 
-AUTHOR
-------
+AUTHORS
+-------
 Tatsuya Mori <mori.tatsuya@gmail.com>
+Eric Wong <normalperson@yhbt.net>
