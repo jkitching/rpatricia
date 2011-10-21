@@ -1,4 +1,7 @@
-0.08 2011/0812
+0.09 2011/10/20
+ - added basic support for Enumerable mixin
+
+0.08 2011/08/12
  - IPv6 support: Patricia.new(:AF_INET6)
  - minor internal cleanups and speedups
 

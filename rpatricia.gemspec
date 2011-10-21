@@ -3,7 +3,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rpatricia}
-  s.version = %q{0.08} # remember to update Changes if this is changed
+  s.version = %q{0.09} # remember to update Changes if this is changed
 
   s.homepage = "http://www.goto.info.waseda.ac.jp/~tatsuya/rpatricia/"
 

@@ -203,6 +203,22 @@ p_print_nodes (int argc, VALUE *argv, VALUE self)
 }
 
 static VALUE
+p_each(VALUE self)
+{
+  patricia_tree_t *tree;
+  patricia_node_t *node;
+  Data_Get_Struct(self, patricia_tree_t, tree);
+
+  if (tree->head) {
+    PATRICIA_WALK(tree->head, node) {
+      rb_yield(wrap_node(node));
+    } PATRICIA_WALK_END;
+  } else {
+    return Qnil;
+  }
+}
+
+static VALUE
 p_data (VALUE self)
 {
   VALUE user_data;
@@ -352,6 +368,7 @@ void
 Init_rpatricia (void)
 {
   cPatricia = rb_define_class("Patricia", rb_cObject);
+  rb_include_module(cPatricia, rb_mEnumerable);
   cNode = rb_define_class_under(cPatricia, "Node", rb_cObject);
   sym_AF_INET = ID2SYM(rb_intern("AF_INET"));
   sym_AF_INET6 = ID2SYM(rb_intern("AF_INET6"));
@@ -385,6 +402,7 @@ Init_rpatricia (void)
   /* derivatives of climb */
   rb_define_method(cPatricia, "num_nodes", p_num_nodes, 0);
   rb_define_method(cPatricia, "show_nodes", p_print_nodes, -1);
+  rb_define_method(cPatricia, "each", p_each, 0);
 
   /* destroy tree */
   rb_define_method(cPatricia, "destroy", p_destroy, 0); 
