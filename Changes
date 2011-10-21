@@ -1,5 +1,6 @@
 0.09 2011/10/20
  - added basic support for Enumerable mixin
+ - fixed the Patricia#Node#network method to include the prefix length
 
 0.08 2011/08/12
  - IPv6 support: Patricia.new(:AF_INET6)

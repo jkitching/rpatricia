@@ -242,7 +242,7 @@ p_network (VALUE self)
   char *cstr = RSTRING_PTR(str);
 
   Data_Get_Struct(self, patricia_node_t, node);
-  prefix_toa2x(node->prefix, cstr, 0);
+  prefix_toa2x(node->prefix, cstr, 1);
   rb_str_set_len(str, strlen(cstr));
 
   return str;
